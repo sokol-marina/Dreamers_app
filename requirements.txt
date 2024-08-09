@@ -1,6 +1,8 @@
 bcrypt==4.2.0
 blinker==1.8.2
+certifi==2024.7.4
 cffi==1.14.2
+charset-normalizer==3.3.2
 click==8.1.7
 dnspython==2.6.1
 email_validator==2.2.0
@@ -19,8 +21,10 @@ parso==0.8.4
 psycopg2-binary==2.9.9
 pycparser==2.19
 python-dotenv==1.0.1
+requests==2.32.3
 six==1.11.0
 SQLAlchemy==1.4.49
 typing_extensions==4.12.2
+urllib3==2.2.2
 Werkzeug==2.0.3
 WTForms==2.3.3
