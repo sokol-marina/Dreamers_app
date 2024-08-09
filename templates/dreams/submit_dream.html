@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Submit Dream
+{% endblock %}
+
+{% block content %}
+
+<h1>Submit Your Dream</h1>
+
+<form method="POST">
+
+  {{ form.hidden_tag() }}
+
+  {% for field in form if field.widget.input_type != 'hidden' %}
+    <div class="form-group">
+      {{ field.label(class="form-label") }}
+      {{ field(class="form-control") }}
+      {% if field.errors %}
+        <div class="alert alert-danger">
+          {% for error in field.errors %}
+            <span>{{ error }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <button type="submit" class="btn btn-primary">Submit Dream</button>
+</form>
+
+{% endblock %}
