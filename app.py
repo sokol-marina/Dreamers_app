@@ -31,6 +31,7 @@ headers = {"Authorization": f"Bearer {os.getenv('HUGGING_FACE_API_KEY')}"}
 app.debug = True
 toolbar = DebugToolbarExtension(app)
 
+
 def query_huggingface_api(dream_description):
     """Send the dream description to Hugging Face API and get the interpretation."""
     response = requests.post(API_URL, headers=headers, json={"inputs": dream_description})
