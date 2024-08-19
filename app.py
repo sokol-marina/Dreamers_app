@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, redirect, session, flash, request, jsonify
+from flask import Flask, render_template, redirect, session, flash, request, jsonify,url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from models import connect_db, db, User, Dream
 from forms import RegisterForm, LoginForm, DreamForm
@@ -54,35 +54,31 @@ def query_huggingface_api(dream_description):
         print(f"Error querying Hugging Face API: {e}")
         return [{"generated_text": "An error occurred while querying the API."}]
 
-@app.route("/",methods=['GET', 'POST'])
+@app.route("/", methods=['GET', 'POST'])
 def submit_dream():
     """Allow a user to submit a dream."""
-    interpretation = None
+    # Try to get the interpretation from the query string
+    interpretation = request.args.get('interpretation')
     form = DreamForm()
 
     if form.validate_on_submit():
         dream_description = form.dream_description.data
         result = query_huggingface_api(dream_description)
-        # Send the dream description to the Hugging Face API
         interpretation = result[0]['generated_text']
 
         if "user_id" in session:
-        # User is logged in, save the dream interpretation to the database
             new_dream = Dream(
                 user_id=session['user_id'],
                 dream_description=dream_description,
                 interpretation=interpretation
             )
-
-            # # Add and commit the new dream to the database
             db.session.add(new_dream)
             db.session.commit()
-
             flash("Dream submitted successfully!", "success")
-            # return redirect(f"/users/{session['user_id']}")
         else:
-            # User is not logged in, just show the interpretation without saving
             flash("Dream interpreted, but not saved. Log in to save your dreams.", "info")
+
+        return redirect(url_for('submit_dream', interpretation=interpretation))
 
     return render_template("dreams/submit_dream.html", form=form, interpretation=interpretation)
 
