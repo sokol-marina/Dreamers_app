@@ -28,7 +28,7 @@ class User(db.Model):
     dreams = db.relationship("Dream", backref="user", cascade="all, delete-orphan")
 
     @classmethod
-    def register(cls, username, email, password):
+    def register(cls, username, password, email):
         """Register a user, hashing their password."""
         hashed = bcrypt.generate_password_hash(password).decode("utf8")
         user = cls(username=username, email=email, password=hashed)

@@ -120,9 +120,8 @@ def register():
 def login():
     """Produce login form or handle login."""
 
-    if "id" in session:
-        return redirect("/dream")
-        # return redirect(f"/users/{session['id']}")
+    if "user_id" in session:
+        return redirect("/")
 
     form = LoginForm()
 
@@ -133,6 +132,7 @@ def login():
         user = User.authenticate(username, password)  # <User> or False
         if user:
             session['user_id'] = user.id
+            session['username'] = user.username  
             return redirect(f"/users/{user.id}")
         else:
             form.username.errors = ["Invalid username/password."]
@@ -148,14 +148,20 @@ def logout_user():
     return redirect('/login')
 
 
-@app.route("/users/<int:id>")
-def show_user(id):
+@app.route("/users/<int:user_id>")
+def show_user(user_id):
     """Example page for logged-in-users."""
 
-    if "user_id" not in session or id != session['user_id']:
+    if "user_id" not in session or user_id != session['user_id']:
         raise Unauthorized()
 
-    user = User.query.get_or_404(id)
+    user = User.query.get_or_404(user_id)
 
-    return render_template("users/user_details.html", user=user)
+    # Get page number from query string (default to 1)
+    page = request.args.get('page', 1, type=int)
+
+    # Paginate the dreams, showing 5 per page
+    dreams = Dream.query.filter_by(user_id=user.id).order_by(Dream.timestamp.desc()).paginate(page=page, per_page=5)
+
+    return render_template("users/user_details.html", user=user,  dreams=dreams)
 
