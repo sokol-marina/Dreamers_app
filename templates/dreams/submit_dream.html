@@ -28,5 +28,15 @@ Submit Dream
 
   <button type="submit" class="btn btn-primary">Submit Dream</button>
 </form>
+{% if interpretation %}
+  <div class="mt-4">
+    <h2>Dream Interpretation</h2>
+    <div class="card">
+      <div class="card-body">
+        <p class="card-text">{{ interpretation }}</p>
+      </div>
+    </div>
+  </div>
+{% endif %}
 
 {% endblock %}

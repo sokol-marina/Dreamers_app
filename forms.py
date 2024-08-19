@@ -41,8 +41,4 @@ class RegisterForm(FlaskForm):
 class DreamForm(FlaskForm):
     """Add feedback form."""
 
-    title = StringField(
-        "Title",
-        validators=[InputRequired(), Length(max=100)],
-    )
-    content = TextAreaField("Dream Description", validators=[DataRequired()])
+    dream_description = TextAreaField("Dream Description", validators=[DataRequired()])
