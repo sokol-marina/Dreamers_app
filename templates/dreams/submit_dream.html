@@ -1,42 +1,46 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Submit Dream
+Submit Your Dream
 {% endblock %}
 
 {% block content %}
 
-<h1>Submit Your Dream</h1>
 
-<form method="POST">
+<h2 class="text-center">Submit Your Night Dream</h2>
+<br>
+
+<p class="lead text-center">
+  🌜 Please type a night dream that you had recently, or a dream you want to understand. 🌜 
+</p>
+
+<form method="POST">ß
 
   {{ form.hidden_tag() }}
-
   {% for field in form if field.widget.input_type != 'hidden' %}
-    <div class="form-group">
-      {{ field.label(class="form-label") }}
-      {{ field(class="form-control") }}
-      {% if field.errors %}
-        <div class="alert alert-danger">
-          {% for error in field.errors %}
-            <span>{{ error }}</span>
-          {% endfor %}
-        </div>
-      {% endif %}
+  <div class="form-group">
+    {{ field(class="form-control", placeholder="I had a dream when I saw...") }}
+    {% if field.errors %}
+    <div class="alert alert-danger">
+      {% for error in field.errors %}
+      <span>{{ error }}</span>
+      {% endfor %}
     </div>
+    {% endif %}
+  </div>
   {% endfor %}
 
   <button type="submit" class="btn btn-primary">Submit Dream</button>
 </form>
 {% if interpretation %}
-  <div class="mt-4">
-    <h2>Dream Interpretation</h2>
-    <div class="card">
-      <div class="card-body">
-        <p class="card-text">{{ interpretation }}</p>
-      </div>
+<div class="mt-4">
+  <h2>Dream Interpretation</h2>
+  <div class="card">
+    <div class="card-body">
+      <p class="card-text">{{ interpretation }}</p>
     </div>
   </div>
+</div>
 {% endif %}
 <script src="{{ url_for('static', filename='js/submit_dream.js') }}"></script>
 
