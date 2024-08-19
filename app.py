@@ -25,7 +25,7 @@ API_URL = "https://api-inference.huggingface.co/models/openai-community/gpt2"
 headers = {"Authorization": f"Bearer {os.getenv('HUGGING_FACE_API_KEY')}"}
 
 app.debug = True
-toolbar = DebugToolbarExtension(app)
+
 connect_db(app)
 
 def query_huggingface_api(dream_description):
