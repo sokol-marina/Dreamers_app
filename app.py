@@ -28,59 +28,120 @@ app.debug = True
 
 connect_db(app)
 
-def query_huggingface_api(dream_description):
-    """Send the dream description to Hugging Face API and get the interpretation."""
-    try:
-        prompt = f"Please interpret the following dream: {dream_description}"
-        response = requests.post(API_URL, headers=headers,json={"inputs": prompt})
-        # Print or log the response code
-        print(f"Response Code: {response.status_code}")
-        print(f"Response Content: {response.text}")
-        
-        response.raise_for_status()  # Raise an error for bad responses (4xx and 5xx)
-        response_data = response.json()
-        
-        # Check if the response has the expected structure
-        if isinstance(response_data, list) and len(response_data) > 0 and 'generated_text' in response_data[0]:
-            generated_text = response_data[0]['generated_text']
-            # Remove the prompt from the generated text if it's included
-            clean_text = generated_text.replace(prompt, '').strip()
-            # Update the text in response
-            response_data[0]['generated_text'] = clean_text  
-            return response_data  # Return the list with generated text
-        else:
-            return [{"generated_text": "No interpretation available."}]
-    except requests.exceptions.RequestException as e:
-        print(f"Error querying Hugging Face API: {e}")
-        return [{"generated_text": "An error occurred while querying the API."}]
+import http.client
+import json
 
+def interpret_dream(dream_description):
+    conn = http.client.HTTPSConnection(os.getenv('x-rapidapi-host'))
+
+    payload = json.dumps({
+        "messages": [
+            {"role": "user", "content": f"Please interpret the following dream: {dream_description}. Reply with 200 character max"}
+        ],
+        "web_access": False
+    })
+
+    headers = {
+        'x-rapidapi-key': os.getenv('x-rapidapi-key'),
+        'x-rapidapi-host': os.getenv('x-rapidapi-host'),
+        'Content-Type': "application/json"
+    }
+
+    conn.request("POST", "/chatgpt", payload, headers)
+    res = conn.getresponse()
+    data = res.read()
+    conn.close()
+
+    response = json.loads(data.decode("utf-8"))
+
+    # Return the interpretation from the 'result' key
+    return response.get('result', 'No interpretation available')
+
+
+# def query_huggingface_api(dream_description):
+#     """Send the dream description to Hugging Face API and get the interpretation."""
+#     try:
+#         prompt = f"Please interpret the following dream: {dream_description}"
+#         response = requests.post(API_URL, headers=headers,json={"inputs": prompt})
+#         # Print or log the response code
+#         print(f"Response Code: {response.status_code}")
+#         print(f"Response Content: {response.text}")
+        
+#         response.raise_for_status()  # Raise an error for bad responses (4xx and 5xx)
+#         response_data = response.json()
+        
+#         # Check if the response has the expected structure
+#         if isinstance(response_data, list) and len(response_data) > 0 and 'generated_text' in response_data[0]:
+#             generated_text = response_data[0]['generated_text']
+#             # Remove the prompt from the generated text if it's included
+#             clean_text = generated_text.replace(prompt, '').strip()
+#             # Update the text in response
+#             response_data[0]['generated_text'] = clean_text  
+#             return response_data  # Return the list with generated text
+#         else:
+#             return [{"generated_text": "No interpretation available."}]
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error querying Hugging Face API: {e}")
+#         return [{"generated_text": "An error occurred while querying the API."}]
 @app.route("/", methods=['GET', 'POST'])
 def submit_dream():
     """Allow a user to submit a dream."""
-    # Try to get the interpretation from the query string
-    interpretation = request.args.get('interpretation')
+    interpretation = None
     form = DreamForm()
 
     if form.validate_on_submit():
         dream_description = form.dream_description.data
-        result = query_huggingface_api(dream_description)
-        interpretation = result[0]['generated_text']
+        # Use the interpret_dream function to get the interpretation
+        interpretation = interpret_dream(dream_description)
 
         if "user_id" in session:
+            # User is logged in, save the dream interpretation to the database
             new_dream = Dream(
                 user_id=session['user_id'],
                 dream_description=dream_description,
                 interpretation=interpretation
             )
+
             db.session.add(new_dream)
             db.session.commit()
+
             flash("Dream submitted successfully!", "success")
         else:
+            # User is not logged in, just show the interpretation without saving
             flash("Dream interpreted, but not saved. Log in to save your dreams.", "info")
 
         return redirect(url_for('submit_dream', interpretation=interpretation))
 
-    return render_template("dreams/submit_dream.html", form=form, interpretation=interpretation)
+    return render_template("dreams/submit_dream.html", form=form, interpretation=request.args.get('interpretation'))
+
+
+# @app.route("/", methods=['GET', 'POST'])
+# def submit_dream():
+#     """Allow a user to submit a dream."""
+#     # Try to get the interpretation from the query string
+#     interpretation = request.args.get('interpretation')
+#     form = DreamForm()
+
+#     if form.validate_on_submit():
+#         dream_description = form.dream_description.data
+#         result = query_huggingface_api(dream_description)
+#         interpretation = result[0]['generated_text']
+
+#         if "user_id" in session:
+#             new_dream = Dream(
+#                 user_id=session['user_id'],
+#                 dream_description=dream_description,
+#                 interpretation=interpretation
+#             )
+#             db.session.add(new_dream)
+#             db.session.commit()
+#             flash("Dream submitted successfully!", "success")
+#         else:
+#             flash("Dream interpreted, but not saved. Log in to save your dreams.", "info")
+
+#         return redirect(url_for('submit_dream', interpretation=interpretation))
+
+#     return render_template("dreams/submit_dream.html", form=form, interpretation=interpretation)
 
 
 @app.route('/register', methods=['GET', 'POST'])
